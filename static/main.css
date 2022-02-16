@@ -1,0 +1,25 @@
+body, html {
+    padding-right: 500px;
+    font-family: sans-serif;
+    background-color: #a1aeb3;
+}
+
+.content {
+    margin: 0 auto;
+    width: 400px;
+}
+table {
+    padding-right: 200px;
+    border: none;
+    width: 300%;
+}
+
+tr:hover {background-color: coral;}
+
+.form {
+    margin-top: 20px;
+}
+
+#content {
+    width: 70%;
+}

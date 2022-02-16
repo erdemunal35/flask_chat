@@ -1,0 +1,94 @@
+{% extends 'base.html' %}
+
+{% block head %}
+<title>Room: {{room}} | Username: {{username}}</title>
+<script type="text/javascript" src="//code.jquery.com/jquery-2.2.4.min.js"></script>
+        <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/socket.io/1.4.8/socket.io.min.js"></script>
+        <script type="text/javascript" charset="utf-8">
+            var socket;
+            $(document).ready(function(){
+                socket = io.connect('http://' + document.domain + ':' + location.port + '/chat');
+                socket.on('connect', function() {
+                    console.log("in connection");
+                    socket.emit('join', {msg: '{{username}}', msg2: '{{room}}'});
+                });
+                socket.on('status', function(data) {
+                    console.log("in status");
+                    $('h1').attr('data-text', 'This is some other text');
+
+                    var td = document.getElementById('sessionchat');
+                    $('#chat_old').val($('#chat_old').val() + '<' + data.msg + '>\n');
+                    $('#chat_old').scrollTop($('#chat_old')[0].scrollHeight);
+                });
+                socket.on('message', function(data) {
+                    console.log("in message");
+                    console.log(data);
+                    console.log(data.color);
+                    console.log(data.username);
+                    console.log(data.content);
+                    var new_tr = document.getElementById('chat_table');
+                    
+                    new_tr.innetHTMl = '<td style="text-align: left;"></td>' +
+                                                        '<td style="text-align: center;' + ' color: '+data.color+'">' + data.username+': '+ data.content+'</td>' +
+                                                        '<td style="color:#000000; text-align: right;">'+Date.UTC()+'</td>';
+                    
+                    console.log(new_tr.innetHTMl);
+                });
+                $('#sendbutton').click(function(e) {
+                    console.log("in send button");
+                    text = $('#text').val();
+                    console.log(text);
+                    console.log($('#text').val());
+                    console.log($('#text'));
+                    $('#text').val('');
+                    var new_tr = document.getElementById('chat_table');
+                    new_tr.innetHTMl = '<td style="text-align: left;">'+ text+'</td>' +
+                                                        '<td style="text-align: center;"></td>' +
+                                                        '<td style="color:#000000; text-align: right;">'+Date.UTC()+'</td>';
+                    console.log(new_tr.innetHTMl);                                  
+                    socket.emit('text', {msg: text, msg2: '{{username}}', msg3: '{{room}}', msg4: '{{color}}'});
+                });
+            });
+            function leave_room() {
+                socket.emit('left', {}, function() {
+                    socket.disconnect();
+                    // go back to the login page
+                    window.location.href = "{{ url_for('index') }}";
+                });
+            }
+        </script>
+{% endblock %}
+
+{% block body %}
+<div class="content">
+    <h1 style="text-align: center">Chat Room</h1>
+    {% if messages|length < 0 %}
+    <h3 style="text-align: center">No messages in the server for now.</h3>
+    {% else %}
+    <table id="chat_table">
+        {% for message in messages %}
+        <tr>
+            <td id="mychat" style="text-align: left;">{% if message.username == username %}
+                {{message.content}}
+                {% endif%}
+            </td>
+            <td id=mychatsecond style="text-align: center; color: {{message.color}};">{% if message.username != username %}
+                {{message.username}}: {{message.content}}
+                {% endif%}</td>
+            <td id="date" style="text-align: right;">{{message.date_created}} </td>
+        </tr>
+        {% endfor %}
+
+    </table>
+    {% endif %}
+    
+</div>
+<div class="form">
+    <form action="/chat" method="POST">
+        <textarea id="chat_old" cols="70" rows="10" placeholder="No messages yet. Start one..."></textarea><br /><br />
+        <input type="text" name="text" id="text" placeholder="Enter your message"/><br />
+        <button type="button" id="sendbutton">Send</button>
+        <center><button type="button" class="btn btn-danger" onclick=leave_room()>Leave this Chat</button></center>
+    </form>
+</div>
+{% endblock %}
